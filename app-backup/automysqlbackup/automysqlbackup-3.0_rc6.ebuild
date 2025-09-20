@@ -20,6 +20,10 @@ RDEPEND="app-arch/bzip2
 "
 DEPEND=""
 
+PATCHES=(
+    "${FILESDIR}/use_mariadb.patch"
+)
+
 src_install() {
 	dobin automysqlbackup
 	insinto /etc/automysqlbackup
