@@ -1,0 +1,28 @@
+diff '--color=auto' -Naur a/src/espeakng_loader/__init__.py b/src/espeakng_loader/__init__.py
+--- a/src/espeakng_loader/__init__.py	2025-01-05 01:25:33.000000000 +0000
++++ b/src/espeakng_loader/__init__.py	2025-09-30 12:28:02.626918333 +0100
+@@ -4,15 +4,10 @@
+ import os
+ 
+ def get_library_path():
+-    ext = ".dll" if platform.system() == "Windows" else ".so" if platform.system() == "Linux" else ".dylib"
+-    lib_name = "espeak-ng" + ext if platform.system() == "Windows" else 'libespeak-ng' + ext
+-    return str(Path(__file__).parent / lib_name)
++    return "/usr/lib64/libespeak-ng.so"
+ 
+ def get_data_path():
+-    data_path = Path(__file__).parent / 'espeak-ng-data'
+-    if not data_path.exists():
+-        raise RuntimeError(f'data path not exists at {data_path}')
+-    return str(data_path)
++    return "/usr/share/espeak-ng-data"
+ 
+ def load_library():
+     """
+@@ -42,4 +37,4 @@
+     elif platform.system() == "Darwin":
+         os.environ["DYLD_LIBRARY_PATH"] = lib_dir + ":" + os.environ.get("DYLD_LIBRARY_PATH", "")
+     else:
+-        raise Exception(f"Unsupported platform: {platform.system()}")
+\ No newline at end of file
++        raise Exception(f"Unsupported platform: {platform.system()}")

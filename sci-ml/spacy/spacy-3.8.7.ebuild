@@ -32,6 +32,9 @@ DEPEND="
 	>=sci-ml/thinc-8.3.0[${PYTHON_USEDEP}]
 	>=dev-python/packaging-20.0[${PYTHON_USEDEP}]
 	dev-python/jinja2[${PYTHON_USEDEP}]
+	>=dev-python/weasel-0.1.0[${PYTHON_USEDEP}]
+	>=dev-python/typer-0.3.0[${PYTHON_USEDEP}]
+	>=dev-python/tqdm-4.38.0[${PYTHON_USEDEP}]
 "
 RDEPEND="${DEPEND}
 	cuda? ( >=dev-python/cupy-9.0.0[${PYTHON_USEDEP}] )
@@ -39,6 +42,10 @@ RDEPEND="${DEPEND}
 BDEPEND="
 	dev-python/setuptools[${PYTHON_USEDEP}]
 "
+
+PATCHES=(
+    "${FILESDIR}"/remove_langcodes_dependency.patch
+)
 
 S="${WORKDIR}/spacy-${PV}"
 

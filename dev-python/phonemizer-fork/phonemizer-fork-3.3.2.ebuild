@@ -22,6 +22,7 @@ RDEPEND="
 	dev-python/segments[${PYTHON_USEDEP}]
 	>=dev-python/attrs-18.1[${PYTHON_USEDEP}]
 	dev-python/typing-extensions[${PYTHON_USEDEP}]
+	dev-python/dlinfo[${PYTHON_USEDEP}]
 "
 EPYTEST_PLUGINS=()
 distutils_enable_tests pytest

@@ -25,6 +25,7 @@ DEPEND="
 		>=sci-ml/spacy-3.8.3[${PYTHON_USEDEP}]
 		>=sci-ml/misaki-0.7.10[${PYTHON_USEDEP}]
 		>=dev-python/tabulate-0.9.0[${PYTHON_USEDEP}]
+		dev-python/beautifulsoup4[${PYTHON_USEDEP}]
 	')
 	media-video/ffmpeg
 	app-accessibility/espeak-ng

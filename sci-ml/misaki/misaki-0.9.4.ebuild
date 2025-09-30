@@ -22,5 +22,6 @@ RDEPEND="
 	en? (
 		dev-python/num2words[${PYTHON_USEDEP}]
 		dev-python/phonemizer-fork[${PYTHON_USEDEP}]
+		dev-python/espeakng-loader[${PYTHON_USEDEP}]
 	)
 "
