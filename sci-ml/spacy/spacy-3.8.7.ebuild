@@ -38,6 +38,8 @@ DEPEND="
 "
 RDEPEND="${DEPEND}
 	cuda? ( >=dev-python/cupy-9.0.0[${PYTHON_USEDEP}] )
+	sci-ml/xx-ent-wiki-sm[${PYTHON_USEDEP}]
+	sci-ml/en-core-web-sm[${PYTHON_USEDEP}]
 "
 BDEPEND="
 	dev-python/setuptools[${PYTHON_USEDEP}]
