@@ -1,0 +1,12 @@
+diff '--color=auto' -Naur a/audiblez/core.py b/audiblez/core.py
+--- a/audiblez/core.py	1970-01-01 01:00:00.000000000 +0100
++++ b/audiblez/core.py	2025-10-11 16:48:40.930206071 +0100
+@@ -52,7 +52,7 @@
+             except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                 raise RuntimeError("Cannot locate Homebrew Cellar. Is 'brew' installed and in PATH?") from e
+         elif platform.system() == 'Linux':
+-            library = glob('/usr/lib/*/libespeak-ng*')[0]
++            library = glob('/usr/lib64/libespeak-ng*')[0]
+         elif platform.system() == 'Windows':
+             library = 'C:\\Program Files*\\eSpeak NG\\libespeak-ng.dll'
+         else:
