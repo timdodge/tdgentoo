@@ -35,7 +35,7 @@ DEPEND="
 	)
 "
 RDEPEND="${DEPEND}
-	sci-libs/miopen[hipblaslt,rocblas,roctracer,composable-kernel]"
+	sci-libs/miopen[hipblaslt,rocblas,roctracer]"
 BDEPEND=""
 
 PATCHES=(

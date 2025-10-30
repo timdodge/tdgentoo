@@ -1,0 +1,211 @@
+diff '--color=auto' -Naur a/aten/src/ATen/native/cuda/Embedding.cu b/aten/src/ATen/native/cuda/Embedding.cu
+--- a/aten/src/ATen/native/cuda/Embedding.cu	2025-08-04 17:51:07.000000000 +0100
++++ b/aten/src/ATen/native/cuda/Embedding.cu	2025-10-28 15:20:56.043448606 +0000
+@@ -369,7 +369,7 @@
+ 
+     int warp_size = at::cuda::warp_size();
+     TORCH_INTERNAL_ASSERT(num_threads() % warp_size == 0 &&
+-                  num_threads() <= cuda_utils::kCUDABlockReduceMaxThreads,
++                  num_threads() <= cuda_utils::kCUDABlockReduceMaxThreads(),
+                   "BlockReduceSum requires all warps be active");
+     const int64_t *num_unique_indices_ptr = num_unique_indices.const_data_ptr<int64_t>();
+     dim3 grid = unique_indices.numel();
+diff '--color=auto' -Naur a/aten/src/ATen/native/cuda/MultinomialKernel.cu b/aten/src/ATen/native/cuda/MultinomialKernel.cu
+--- a/aten/src/ATen/native/cuda/MultinomialKernel.cu	2025-08-04 17:51:07.000000000 +0100
++++ b/aten/src/ATen/native/cuda/MultinomialKernel.cu	2025-10-28 15:20:56.043448606 +0000
+@@ -86,7 +86,7 @@
+   TORCH_CHECK(props != nullptr);
+   int numSM = props->multiProcessorCount;
+   const int64_t maxThreads = std::min(
+-      props->maxThreadsPerBlock, cuda_utils::kCUDABlockReduceMaxThreads);
++      props->maxThreadsPerBlock, cuda_utils::kCUDABlockReduceMaxThreads());
+ 
+   int warp_size = at::cuda::warp_size();
+   dim3 grid(rows < numSM * 4 ? rows : numSM * 4);
+diff '--color=auto' -Naur a/aten/src/ATen/native/cuda/SoftMax.cu b/aten/src/ATen/native/cuda/SoftMax.cu
+--- a/aten/src/ATen/native/cuda/SoftMax.cu	2025-08-04 17:51:07.000000000 +0100
++++ b/aten/src/ATen/native/cuda/SoftMax.cu	2025-10-28 15:20:56.043448606 +0000
+@@ -183,15 +183,16 @@
+   uint64_t block_size = 1;
+   uint64_t max_block_size = std::min(dim_size, static_cast<uint64_t>(max_threads));
+ 
+-  // We need a block size that is a multiple of C10_WARP_SIZE in order
++  // We need a block size that is a multiple of at::cuda::warp_size() in order
+   // to perform block size reductions using warp shuffle instructions.
+-  // Since max_threads is also a multiple of C10_WARPS_SIZE we do not
++  // Since max_threads is also a multiple of at::cuda::warp_size() we do not
+   // risk creating a block size larger than the limit.
+ 
+-  if (max_block_size % C10_WARP_SIZE == 0) {
++  int warp_size = at::cuda::warp_size();
++  if (max_block_size % warp_size == 0) {
+     block_size = max_block_size;
+   } else {
+-    block_size = (max_block_size / C10_WARP_SIZE + 1) * C10_WARP_SIZE;
++    block_size = (max_block_size / warp_size + 1) * warp_size;
+   }
+ 
+   return dim3(block_size);
+@@ -1107,7 +1108,7 @@
+             constexpr int ILP = sizeof(float4) / sizeof(scalar_t);
+             if constexpr (use_fast_softmax) {
+               dim3 block(512);
+-              size_t smem_reduction_sz = block.x / C10_WARP_SIZE * sizeof(accscalar_t);
++              size_t smem_reduction_sz = block.x / at::cuda::warp_size() * sizeof(accscalar_t);
+               if (dim_size % ILP == 0) {
+                 cunn_SoftMaxForwardGmem<ILP, scalar_t, accscalar_t, scalar_t, EpilogueWithMul>
+                     <<<grid, block, smem_reduction_sz, stream>>>(output_ptr, input_ptr, dim_size);
+@@ -1117,7 +1118,7 @@
+               }
+             } else {
+               dim3 block = SoftMaxForward_getBlockSize(dim_size);
+-              size_t smem_reduction_sz = block.x / C10_WARP_SIZE * sizeof(accscalar_t);
++              size_t smem_reduction_sz = block.x / at::cuda::warp_size() * sizeof(accscalar_t);
+               auto max_elements_per_smem = (at::cuda::getCurrentDeviceProperties()->sharedMemPerBlock -
+                 smem_reduction_sz) / sizeof(scalar_t);
+ 
+@@ -1198,7 +1199,7 @@
+             constexpr int ILP = sizeof(float4) / sizeof(scalar_t);
+             if constexpr (use_fast_softmax) {
+               dim3 block(512);
+-              size_t smem_reduction_sz = block.x / C10_WARP_SIZE * sizeof(accscalar_t);
++              size_t smem_reduction_sz = block.x / at::cuda::warp_size() * sizeof(accscalar_t);
+               if (dim_size % ILP == 0) {
+                 cunn_SoftMaxForwardGmem<ILP, scalar_t, accscalar_t, accscalar_t, EpilogueWithMul>
+                     <<<grid, block, smem_reduction_sz, stream>>>(output_ptr, input_ptr, dim_size);
+@@ -1208,7 +1209,7 @@
+               }
+             } else {
+               dim3 block = SoftMaxForward_getBlockSize(dim_size);
+-              size_t smem_reduction_sz = block.x / C10_WARP_SIZE * sizeof(accscalar_t);
++              size_t smem_reduction_sz = block.x / at::cuda::warp_size() * sizeof(accscalar_t);
+               auto max_elements_per_smem = (at::cuda::getCurrentDeviceProperties()->sharedMemPerBlock -
+                 smem_reduction_sz) / sizeof(scalar_t);
+ 
+@@ -1274,7 +1275,7 @@
+   constexpr int ILP = sizeof(float4) / sizeof(output_t);
+   dim3 block = SoftMax_getBlockSize(ILP, dim_size);
+ 
+-  size_t smem_reduction_sz = block.x / C10_WARP_SIZE * sizeof(accscalar_t);
++  size_t smem_reduction_sz = block.x / at::cuda::warp_size() * sizeof(accscalar_t);
+   auto max_elements_per_smem = (at::cuda::getCurrentDeviceProperties()->sharedMemPerBlock -
+     smem_reduction_sz) / sizeof(output_t);
+   bool can_use_smem = static_cast<size_t>(dim_size) < max_elements_per_smem;
+diff '--color=auto' -Naur a/aten/src/ATen/native/cuda/TensorModeKernel.cu b/aten/src/ATen/native/cuda/TensorModeKernel.cu
+--- a/aten/src/ATen/native/cuda/TensorModeKernel.cu	2025-08-04 17:51:07.000000000 +0100
++++ b/aten/src/ATen/native/cuda/TensorModeKernel.cu	2025-10-28 15:20:56.043448606 +0000
+@@ -207,7 +207,7 @@
+   constexpr int num_threads = size / 2;
+   int warp_size = at::cuda::warp_size();
+   TORCH_INTERNAL_ASSERT(num_threads % warp_size == 0 &&
+-                num_threads <= cuda_utils::kCUDABlockReduceMaxThreads, "");
++                num_threads <= cuda_utils::kCUDABlockReduceMaxThreads(), "");
+   const auto memsize =
+       (sizeof(scalar_t) * size) + (2 * size * sizeof(unsigned int));
+   compute_mode<scalar_t, size>
+diff '--color=auto' -Naur a/aten/src/ATen/native/cuda/TensorTopK.cu b/aten/src/ATen/native/cuda/TensorTopK.cu
+--- a/aten/src/ATen/native/cuda/TensorTopK.cu	2025-08-04 17:51:07.000000000 +0100
++++ b/aten/src/ATen/native/cuda/TensorTopK.cu	2025-10-28 15:20:56.043448606 +0000
+@@ -439,8 +439,12 @@
+     warp_counts[warp] = count;
+   }
+   __syncthreads();
++#ifdef USE_ROCM
++  CUDA_KERNEL_ASSERT(RADIX_DIGITS < C10_WARP_SIZE * C10_WARP_SIZE);
++#else
+   static_assert(RADIX_DIGITS < C10_WARP_SIZE * C10_WARP_SIZE,
+     "Assuming only 1 warp is needed for final reduction");
++#endif
+   if (warp != 0) {
+     return;
+   }
+diff '--color=auto' -Naur a/aten/src/ATen/native/cuda/block_reduce.cuh b/aten/src/ATen/native/cuda/block_reduce.cuh
+--- a/aten/src/ATen/native/cuda/block_reduce.cuh	2025-08-04 17:51:07.000000000 +0100
++++ b/aten/src/ATen/native/cuda/block_reduce.cuh	2025-10-28 15:20:56.043448606 +0000
+@@ -12,7 +12,17 @@
+ // of which reduces C10_WARP_SIZE elements. So, at most
+ // C10_WARP_SIZE**2 elements can be reduced at a time.
+ // NOTE: This is >= the max block size on current hardware anyway (1024).
+-constexpr int kCUDABlockReduceMaxThreads = C10_WARP_SIZE * C10_WARP_SIZE;
++// ROCm NOTE: C10_WARP_SIZE should only be used inside device functions,
++// and kCUDABlockReduceMaxThreads is a host-side variable.
++#ifdef USE_ROCM
++static int kCUDABlockReduceMaxThreads() {
++    return at::cuda::warp_size() * at::cuda::warp_size();
++}
++#else
++constexpr int kCUDABlockReduceMaxThreads() {
++    return C10_WARP_SIZE * C10_WARP_SIZE;
++}
++#endif
+ 
+ // Sums `val` across all threads in a warp.
+ //
+diff '--color=auto' -Naur a/c10/macros/Macros.h b/c10/macros/Macros.h
+--- a/c10/macros/Macros.h	2025-08-04 17:51:07.000000000 +0100
++++ b/c10/macros/Macros.h	2025-10-28 15:20:56.043448606 +0000
+@@ -312,7 +312,21 @@
+ #endif
+ 
+ #if defined(USE_ROCM)
+-#define C10_WARP_SIZE warpSize // = 64 or 32 (Defined in hip_runtime.h)
++// C10_WARP_SIZE is only allowed for device code.
++// Host code _must_ use at::cuda::warp_size()
++// HIP header used to define warpSize as a constexpr that was either 32 or 64
++// depending on the target device, and then always set it to 64 for host code.
++// Host pass of HIP compiler needs C10_WARP_SIZE defined to _something_ so we
++// set it to something unreasonable to trigger obvious host code errors.
++#if defined(__HIP_DEVICE_COMPILE__)
++#if defined(__GFX9__)
++static constexpr int C10_WARP_SIZE = 64;
++#else // __GFX9__
++static constexpr int C10_WARP_SIZE = 32;
++#endif // __GFX9__
++#else
++static constexpr int C10_WARP_SIZE = 1;
++#endif // __HIP_DEVICE_COMPILE__
+ #else
+ #define C10_WARP_SIZE 32
+ #endif
+diff '--color=auto' -Naur a/torch/csrc/distributed/c10d/symm_mem/CUDASymmetricMemory.cu b/torch/csrc/distributed/c10d/symm_mem/CUDASymmetricMemory.cu
+--- a/torch/csrc/distributed/c10d/symm_mem/CUDASymmetricMemory.cu	2025-08-04 17:51:07.000000000 +0100
++++ b/torch/csrc/distributed/c10d/symm_mem/CUDASymmetricMemory.cu	2025-10-28 15:23:33.465450149 +0000
+@@ -255,7 +255,7 @@
+ void CUDASymmetricMemory::barrier(int channel, size_t timeout_ms) {
+   check_channel(channel, world_size_);
+   c10::cuda::CUDAGuard guard(local_device_idx_);
+-  barrier_kernel<<<1, C10_WARP_SIZE, 0, at::cuda::getCurrentCUDAStream()>>>(
++  barrier_kernel<<<1, at::cuda::warp_size(), 0, at::hip::getCurrentHIPStreamMasqueradingAsCUDA()>>>(
+       reinterpret_cast<uint32_t**>(signal_pads_dev_),
+       channel,
+       rank_,
+@@ -293,7 +293,7 @@
+     size_t timeout_ms) {
+   check_channel(channel, world_size_);
+   c10::cuda::CUDAGuard guard(local_device_idx_);
+-  put_signal_kernel<<<1, C10_WARP_SIZE, 0, at::cuda::getCurrentCUDAStream()>>>(
++  put_signal_kernel<<<1, at::cuda::warp_size(), 0, at::hip::getCurrentHIPStreamMasqueradingAsCUDA()>>>(
+       reinterpret_cast<uint32_t**>(signal_pads_dev_),
+       dst_rank,
+       channel,
+@@ -337,7 +337,7 @@
+     size_t timeout_ms) {
+   check_channel(channel, world_size_);
+   c10::cuda::CUDAGuard guard(local_device_idx_);
+-  wait_signal_kernel<<<1, C10_WARP_SIZE, 0, at::cuda::getCurrentCUDAStream()>>>(
++  wait_signal_kernel<<<1, at::cuda::warp_size(), 0, at::hip::getCurrentHIPStreamMasqueradingAsCUDA()>>>(
+       reinterpret_cast<uint32_t**>(signal_pads_dev_),
+       src_rank,
+       channel,
+diff '--color=auto' -Naur a/torch/csrc/distributed/c10d/symm_mem/CUDASymmetricMemoryOps.cu b/torch/csrc/distributed/c10d/symm_mem/CUDASymmetricMemoryOps.cu
+--- a/torch/csrc/distributed/c10d/symm_mem/CUDASymmetricMemoryOps.cu	2025-08-04 17:51:07.000000000 +0100
++++ b/torch/csrc/distributed/c10d/symm_mem/CUDASymmetricMemoryOps.cu	2025-10-28 15:20:56.043448606 +0000
+@@ -114,7 +114,7 @@
+     num_blocks = 1;
+     num_threads = at::round_up(
+         at::ceil_div(numel_per_split, numel_per_thread),
+-        static_cast<size_t>(C10_WARP_SIZE));
++        static_cast<size_t>(at::cuda::warp_size()));
+   } else {
+     num_blocks = std::min(
+         at::ceil_div(numel_per_split, max_num_threads * numel_per_thread),

@@ -1,0 +1,90 @@
+From 25ee47c911c3e792cc507f91def7b99db3c5d4c1 Mon Sep 17 00:00:00 2001
+From: Gerardo Hernandez <gerardo.hernandez@amd.com>
+Date: Mon, 2 Jun 2025 18:01:43 +0100
+Subject: [PATCH 1/2] SWDEV-535598 - remove usage of 'warpSize' variable as it
+ has been deprecated. Ideally get_warp_size() should not be constexpr but this
+ is just a workaround
+
+---
+ include/ck/utility/get_id.hpp      | 9 +++++++--
+ include/ck_tile/core/arch/arch.hpp | 9 +++++++--
+ 2 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/include/ck/utility/get_id.hpp b/include/ck/utility/get_id.hpp
+index 77564c6130b..4e733020f7d 100644
+--- a/include/ck/utility/get_id.hpp
++++ b/include/ck/utility/get_id.hpp
+@@ -9,8 +9,13 @@ namespace ck {
+ 
+ __host__ __device__ constexpr index_t get_warp_size()
+ {
+-    // warpSize is defined by HIP
+-    return warpSize;
++    // this is a temporary workaround until composable_kernel stops assuming
++    // it can get the warpSize as constexpr
++#if defined(__GFX9__) || !defined(__HIP_DEVICE_COMPILE__)
++    return 64;
++#else
++    return 32;
++#endif
+ }
+ 
+ __device__ index_t get_thread_local_1d_id() { return threadIdx.x; }
+diff --git a/include/ck_tile/core/arch/arch.hpp b/include/ck_tile/core/arch/arch.hpp
+index 1d3cf5c0107..24fb1c2e1b3 100644
+--- a/include/ck_tile/core/arch/arch.hpp
++++ b/include/ck_tile/core/arch/arch.hpp
+@@ -50,8 +50,13 @@ enum struct memory_operation_enum : std::uint16_t
+ 
+ CK_TILE_HOST_DEVICE constexpr index_t get_warp_size()
+ {
+-    // warpSize is defined by HIP
+-    return warpSize;
++    // this is a temporary workaround until composable_kernel stops assuming
++    // it can get the warpSize as constexpr
++#if defined(__GFX9__) || !defined(__HIP_DEVICE_COMPILE__)
++    return 64;
++#else
++    return 32;
++#endif
+ }
+ 
+ CK_TILE_DEVICE index_t get_grid_size() { return gridDim.x; }
+
+From 08dd900ccda96687416395be5b7360330338a083 Mon Sep 17 00:00:00 2001
+From: Gerardo Hernandez <gerardo.hernandez@amd.com>
+Date: Wed, 4 Jun 2025 08:48:49 +0100
+Subject: [PATCH 2/2] SWDEV-535598 - remove comment from get_warp_size as
+ constexpr is required for this repo
+
+---
+ include/ck/utility/get_id.hpp      | 2 --
+ include/ck_tile/core/arch/arch.hpp | 2 --
+ 2 files changed, 4 deletions(-)
+
+diff --git a/include/ck/utility/get_id.hpp b/include/ck/utility/get_id.hpp
+index 4e733020f7d..fd0d1024b25 100644
+--- a/include/ck/utility/get_id.hpp
++++ b/include/ck/utility/get_id.hpp
+@@ -9,8 +9,6 @@ namespace ck {
+ 
+ __host__ __device__ constexpr index_t get_warp_size()
+ {
+-    // this is a temporary workaround until composable_kernel stops assuming
+-    // it can get the warpSize as constexpr
+ #if defined(__GFX9__) || !defined(__HIP_DEVICE_COMPILE__)
+     return 64;
+ #else
+diff --git a/include/ck_tile/core/arch/arch.hpp b/include/ck_tile/core/arch/arch.hpp
+index 24fb1c2e1b3..3dd9604b011 100644
+--- a/include/ck_tile/core/arch/arch.hpp
++++ b/include/ck_tile/core/arch/arch.hpp
+@@ -50,8 +50,6 @@ enum struct memory_operation_enum : std::uint16_t
+ 
+ CK_TILE_HOST_DEVICE constexpr index_t get_warp_size()
+ {
+-    // this is a temporary workaround until composable_kernel stops assuming
+-    // it can get the warpSize as constexpr
+ #if defined(__GFX9__) || !defined(__HIP_DEVICE_COMPILE__)
+     return 64;
+ #else

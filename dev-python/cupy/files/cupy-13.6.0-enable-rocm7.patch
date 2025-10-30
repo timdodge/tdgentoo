@@ -1,0 +1,85 @@
+From cbd87ae9c48cc8c0dbeff091e5eb9e04d22b68bf Mon Sep 17 00:00:00 2001
+From: Grant Pinkert <gpinkert@amd.com>
+Date: Wed, 25 Jun 2025 21:51:39 +0000
+Subject: [PATCH] [rocm7] Enable ROCm 7.0
+
+This commit enables ROCm 7.0, and we remain backwards compatible with ROCm 6.4.
+
+Successful 7.0rc1 build here: http://10.216.56.85:8080/job/ROCm-DS/job/GA-H2-2025/job/CuPy%20(ROCm%207.0.0)/33/
+Successful 6.4 build here: http://10.216.56.85:8080/job/ROCm-DS/job/GA-H2-2025/job/CuPy%20(ROCm%207.0.0)/34/
+---
+ cupy_backends/hip/cupy_hipblas.h | 37 ++++++++++++++++++++++++++++++--
+ 1 file changed, 35 insertions(+), 2 deletions(-)
+ mode change 100644 => 100755 cupy_backends/hip/cupy_hipblas.h
+
+diff --git a/cupy_backends/hip/cupy_hipblas.h b/cupy_backends/hip/cupy_hipblas.h
+old mode 100644
+new mode 100755
+index 0dc3d7891d1..47bfc99d469
+--- a/cupy_backends/hip/cupy_hipblas.h
++++ b/cupy_backends/hip/cupy_hipblas.h
+@@ -7,6 +7,15 @@
+ #include <stdexcept>  // for gcc 10
+ 
+ 
++#if HIP_VERSION >= 70000000  // ROCm 7 renamed hipblas*Complex to hip*Complex
++#  if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
++#define hipblasDoubleComplex hipDoubleComplex
++#define hipblasComplex hipFloatComplex
++#define hipblasDatatype_t hipDataType
++#endif
++#else
++#define convert_hipblasComputeType_t convert_hipblasDatatype_t
++#endif
+ extern "C" {
+ 
+ ///////////////////////////////////////////////////////////////////////////////
+@@ -62,6 +71,30 @@ static hipblasDatatype_t convert_hipblasDatatype_t(cudaDataType_t type) {
+ }
+ 
+ 
++#if HIP_VERSION >= 70000000
++#  if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
++static hipblasComputeType_t convert_hipblasComputeType_t(cudaDataType_t type) {
++    switch(type)
++    {
++        case 2:   // CUDA_R_16F
++        case 14:  // CUDA_R_16BF
++        case 0:   // CUDA_R_32F
++        case 4:   // CUDA_C_32F
++            return HIPBLAS_COMPUTE_32F;
++        case 1:   // CUDA_R_64F
++        case 5:   // CUDA_C_64F
++            return HIPBLAS_COMPUTE_64F;
++        case 10:  // CUDA_R_32I
++        case 11:  // CUDA_C_32I
++            return HIPBLAS_COMPUTE_32I;
++        default:
++            throw std::invalid_argument(
++                "unsupported cudaDataType_t for hipblasComputeType_t: " + std::to_string(type));
++    }
++}
++#endif
++#endif
++
+ // Context
+ cublasStatus_t cublasCreate(cublasHandle_t* handle) {
+     return hipblasCreate(handle);
+@@ -376,7 +409,7 @@ cublasStatus_t cublasGemmStridedBatchedEx(cublasHandle_t handle, cublasOperation
+                                        B, convert_hipblasDatatype_t(Btype), ldb, strideB,
+                                        beta,
+                                        C, convert_hipblasDatatype_t(Ctype), ldc, strideC,
+-                                       batchCount, convert_hipblasDatatype_t(computeType),
++                                       batchCount, convert_hipblasComputeType_t(computeType),
+                                        static_cast<hipblasGemmAlgo_t>(160));  // HIPBLAS_GEMM_DEFAULT
+ }
+ 
+@@ -525,7 +558,7 @@ cublasStatus_t cublasGemmEx(cublasHandle_t handle, cublasOperation_t transa, cub
+                          B, convert_hipblasDatatype_t(Btype), ldb,
+                          beta,
+                          C, convert_hipblasDatatype_t(Ctype), ldc,
+-                         convert_hipblasDatatype_t(computetype),
++                         convert_hipblasComputeType_t(computetype),
+                          static_cast<hipblasGemmAlgo_t>(160));  // HIPBLAS_GEMM_DEFAULT
+ }
+ 
