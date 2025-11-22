@@ -1,0 +1,47 @@
+diff '--color=auto' -Naur a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2025-10-14 14:52:57.000000000 +0100
++++ b/CMakeLists.txt	2025-11-13 08:53:51.538468195 +0000
+@@ -53,6 +53,7 @@
+       gfx1100
+       gfx1101
+       gfx1102
++      gfx1103
+       gfx1200
+       gfx1201)
+ 
+diff '--color=auto' -Naur a/src/device/common.h b/src/device/common.h
+--- a/src/device/common.h	2025-10-14 14:52:57.000000000 +0100
++++ b/src/device/common.h	2025-11-13 08:53:51.542468110 +0000
+@@ -26,7 +26,7 @@
+   { __atomic_store_n((DST), (SRC), __ATOMIC_SEQ_CST); }
+ #endif
+ 
+-#if defined(__gfx1100__) || defined(__gfx1101__) || defined(__gfx1102__) || defined(__gfx1200__) || defined(__gfx1201__)
++#if defined(__gfx1100__) || defined(__gfx1101__) || defined(__gfx1102__) || defined(__gfx1103__) || defined(__gfx1200__) || defined(__gfx1201__)
+ #define __trace_hwreg()
+ #else
+ #define __trace_hwreg() \
+diff '--color=auto' -Naur a/src/include/rccl_float8.h b/src/include/rccl_float8.h
+--- a/src/include/rccl_float8.h	2025-10-14 14:52:57.000000000 +0100
++++ b/src/include/rccl_float8.h	2025-11-13 08:55:37.044204886 +0000
+@@ -41,7 +41,7 @@
+ } rccl_bfloat8;
+ 
+ // __cplusplus < 201103L || (!defined(__HIP_PLATFORM_AMD__) && !defined(__HIPCC__))
+-#elif HIP_VERSION >= 60300000 && !(defined(__gfx1100__) || defined(__gfx1101__) || defined(__gfx1102__) || defined(__gfx1030__))
++#elif HIP_VERSION >= 60300000 && !(defined(__gfx1100__) || defined(__gfx1101__) || defined(__gfx1102__) || defined(__gfx1103__) || defined(__gfx1030__))
+ 
+ #include <hip/hip_fp8.h>
+ 
+diff '--color=auto' -Naur a/tools/JitterBench/Common.hpp b/tools/JitterBench/Common.hpp
+--- a/tools/JitterBench/Common.hpp	2025-10-14 14:52:57.000000000 +0100
++++ b/tools/JitterBench/Common.hpp	2025-11-13 08:53:51.542468110 +0000
+@@ -43,7 +43,7 @@
+ #endif
+ 
+ // Macro for collecting HW_REG_HW_ID
+-#if defined(__gfx1100__) || defined(__gfx1101__) || defined(__gfx1102__) || defined(__NVCC__)
++#if defined(__gfx1100__) || defined(__gfx1101__) || defined(__gfx1102__) || defined(__gfx1103__) || defined(__NVCC__)
+ #define GetHwId(val) \
+   val = 0
+ #else

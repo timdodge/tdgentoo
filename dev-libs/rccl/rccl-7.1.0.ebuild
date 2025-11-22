@@ -44,6 +44,7 @@ RESTRICT="!test? ( test )"
 
 PATCHES=(
 	"${FILESDIR}/${PN}-7.0.1-fix-libcxx.patch"
+	"${FILESDIR}/${PN}-7.1.0-add-gfx1103.patch"
 )
 
 src_prepare() {
