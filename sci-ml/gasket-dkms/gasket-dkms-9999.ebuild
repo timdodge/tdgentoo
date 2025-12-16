@@ -16,7 +16,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 src_prepare() {
-	eapply -p2 "${FILESDIR}"/stop_using_no_llseek.patch
+#	eapply -p2 "${FILESDIR}"/stop_using_no_llseek.patch
 	eapply_user
 }
 
