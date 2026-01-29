@@ -1,0 +1,12 @@
+#!/sbin/openrc-run
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+name="danksearch"
+description="danksearch - Fast filesystem search service"
+command=/usr/bin/dsearch
+command_args="serve"
+
+depend() {
+    after net
+}
