@@ -31,9 +31,7 @@ RDEPEND="${DEPEND}"
 BDEPEND=""
 
 src_compile(){
-	export GOAMD64=local
 	ego build -ldflags="-s -w" -o ./dms ./cmd/dms
-	ego build -ldflags="-s -w" -o ./dankinstall ./cmd/dankinstall
 
 	mkdir -pv completions || die
 	./dms completion bash > completions/dms || die
@@ -43,7 +41,6 @@ src_compile(){
 
 src_install(){
 	dobin dms
-	dobin dankinstall
 	dodoc README.md
 
 	dobashcomp completions/dms
