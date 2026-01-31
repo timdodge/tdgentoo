@@ -1,0 +1,174 @@
+diff '--color=auto' -Naur core.org/cmd/dms/commands_greeter.go core/cmd/dms/commands_greeter.go
+--- core.org/cmd/dms/commands_greeter.go	2026-01-16 14:52:13.000000000 +0000
++++ core/cmd/dms/commands_greeter.go	2026-01-31 17:13:49.219069473 +0000
+@@ -152,7 +152,7 @@
+ 		return fmt.Errorf("greeter cache directory not found at %s\nPlease install the greeter first", cacheDir)
+ 	}
+ 
+-	greeterGroupExists := checkGroupExists("greeter")
++	greeterGroupExists := checkGroupExists("greetd")
+ 	if greeterGroupExists {
+ 		currentUser, err := user.Current()
+ 		if err != nil {
+@@ -165,24 +165,24 @@
+ 			return fmt.Errorf("failed to check groups: %w", err)
+ 		}
+ 
+-		inGreeterGroup := strings.Contains(string(groupsOutput), "greeter")
++		inGreeterGroup := strings.Contains(string(groupsOutput), "greetd")
+ 		if !inGreeterGroup {
+-			fmt.Println("\n⚠ Warning: You are not in the greeter group.")
+-			fmt.Print("Would you like to add your user to the greeter group? (y/N): ")
++			fmt.Println("\n⚠ Warning: You are not in the greetd group.")
++			fmt.Print("Would you like to add your user to the greetd group? (y/N): ")
+ 
+ 			var response string
+ 			fmt.Scanln(&response)
+ 			response = strings.ToLower(strings.TrimSpace(response))
+ 
+ 			if response == "y" || response == "yes" {
+-				fmt.Println("\nAdding user to greeter group...")
+-				addUserCmd := exec.Command("sudo", "usermod", "-aG", "greeter", currentUser.Username)
++				fmt.Println("\nAdding user to greetd group...")
++				addUserCmd := exec.Command("sudo", "usermod", "-aG", "greetd", currentUser.Username)
+ 				addUserCmd.Stdout = os.Stdout
+ 				addUserCmd.Stderr = os.Stderr
+ 				if err := addUserCmd.Run(); err != nil {
+-					return fmt.Errorf("failed to add user to greeter group: %w", err)
++					return fmt.Errorf("failed to add user to greetd group: %w", err)
+ 				}
+-				fmt.Println("✓ User added to greeter group")
++				fmt.Println("✓ User added to greetd group")
+ 				fmt.Println("⚠ You will need to log out and back in for the group change to take effect")
+ 			}
+ 		}
+@@ -630,12 +630,12 @@
+ 		return fmt.Errorf("failed to check groups: %w", err)
+ 	}
+ 
+-	inGreeterGroup := strings.Contains(string(groupsOutput), "greeter")
++	inGreeterGroup := strings.Contains(string(groupsOutput), "greetd")
+ 	if inGreeterGroup {
+-		fmt.Println("  ✓ User is in greeter group")
++		fmt.Println("  ✓ User is in greetd group")
+ 	} else {
+-		fmt.Println("  ✗ User is NOT in greeter group")
+-		fmt.Println("    Run 'dms greeter install' to add user to greeter group")
++		fmt.Println("  ✗ User is NOT in greetd group")
++		fmt.Println("    Run 'dms greeter install' to add user to greetd group")
+ 	}
+ 
+ 	cacheDir := "/var/cache/dms-greeter"
+diff '--color=auto' -Naur core.org/internal/greeter/installer.go core/internal/greeter/installer.go
+--- core.org/internal/greeter/installer.go	2026-01-16 14:52:13.000000000 +0000
++++ core/internal/greeter/installer.go	2026-01-31 17:25:13.094996151 +0000
+@@ -191,14 +191,14 @@
+ 		return fmt.Errorf("failed to create cache directory: %w", err)
+ 	}
+ 
+-	if err := runSudoCmd(sudoPassword, "chown", "greeter:greeter", cacheDir); err != nil {
++	if err := runSudoCmd(sudoPassword, "chown", "greetd:greetd", cacheDir); err != nil {
+ 		return fmt.Errorf("failed to set cache directory owner: %w", err)
+ 	}
+ 
+ 	if err := runSudoCmd(sudoPassword, "chmod", "750", cacheDir); err != nil {
+ 		return fmt.Errorf("failed to set cache directory permissions: %w", err)
+ 	}
+-	logFunc(fmt.Sprintf("✓ Created cache directory %s (owner: greeter:greeter, permissions: 750)", cacheDir))
++	logFunc(fmt.Sprintf("✓ Created cache directory %s (owner: greetd:greetd, permissions: 750)", cacheDir))
+ 
+ 	return nil
+ }
+@@ -231,7 +231,7 @@
+ 		{filepath.Join(homeDir, ".local", "share"), ".local/share directory"},
+ 	}
+ 
+-	logFunc("\nSetting up parent directory ACLs for greeter user access...")
++	logFunc("\nSetting up parent directory ACLs for greetd user access...")
+ 
+ 	for _, dir := range parentDirs {
+ 		if _, err := os.Stat(dir.path); os.IsNotExist(err) {
+@@ -241,10 +241,10 @@
+ 			}
+ 		}
+ 
+-		// Set ACL to allow greeter user read+execute permission (for session discovery)
+-		if err := runSudoCmd(sudoPassword, "setfacl", "-m", "u:greeter:rx", dir.path); err != nil {
++		// Set ACL to allow greetd user read+execute permission (for session discovery)
++		if err := runSudoCmd(sudoPassword, "setfacl", "-m", "u:greetd:rx", dir.path); err != nil {
+ 			logFunc(fmt.Sprintf("⚠ Warning: Failed to set ACL on %s: %v", dir.desc, err))
+-			logFunc(fmt.Sprintf("  You may need to run manually: setfacl -m u:greeter:x %s", dir.path))
++			logFunc(fmt.Sprintf("  You may need to run manually: setfacl -m u:greetd:x %s", dir.path))
+ 			continue
+ 		}
+ 
+@@ -268,17 +268,17 @@
+ 		return fmt.Errorf("failed to determine current user")
+ 	}
+ 
+-	// Check if user is already in greeter group
++	// Check if user is already in greetd group
+ 	groupsCmd := exec.Command("groups", currentUser)
+ 	groupsOutput, err := groupsCmd.Output()
+-	if err == nil && strings.Contains(string(groupsOutput), "greeter") {
+-		logFunc(fmt.Sprintf("✓ %s is already in greeter group", currentUser))
++	if err == nil && strings.Contains(string(groupsOutput), "greetd") {
++		logFunc(fmt.Sprintf("✓ %s is already in greetd group", currentUser))
+ 	} else {
+-		// Add current user to greeter group for file access permissions
+-		if err := runSudoCmd(sudoPassword, "usermod", "-aG", "greeter", currentUser); err != nil {
+-			return fmt.Errorf("failed to add %s to greeter group: %w", currentUser, err)
++		// Add current user to greetd group for file access permissions
++		if err := runSudoCmd(sudoPassword, "usermod", "-aG", "greetd", currentUser); err != nil {
++			return fmt.Errorf("failed to add %s to greetd group: %w", currentUser, err)
+ 		}
+-		logFunc(fmt.Sprintf("✓ Added %s to greeter group (logout/login required for changes to take effect)", currentUser))
++		logFunc(fmt.Sprintf("✓ Added %s to greetd group (logout/login required for changes to take effect)", currentUser))
+ 	}
+ 
+ 	configDirs := []struct {
+@@ -301,7 +301,7 @@
+ 			}
+ 		}
+ 
+-		if err := runSudoCmd(sudoPassword, "chgrp", "-R", "greeter", dir.path); err != nil {
++		if err := runSudoCmd(sudoPassword, "chgrp", "-R", "greetd", dir.path); err != nil {
+ 			logFunc(fmt.Sprintf("⚠ Warning: Failed to set group for %s: %v", dir.desc, err))
+ 			continue
+ 		}
+@@ -314,7 +314,7 @@
+ 		logFunc(fmt.Sprintf("✓ Set group permissions for %s", dir.desc))
+ 	}
+ 
+-	// Set up ACLs on parent directories to allow greeter user traversal
++	// Set up ACLs on parent directories to allow greetd user traversal
+ 	if err := SetupParentDirectoryACLs(logFunc, sudoPassword); err != nil {
+ 		return fmt.Errorf("failed to setup parent directory ACLs: %w", err)
+ 	}
+@@ -401,7 +401,7 @@
+ 
+ [default_session]
+ 
+-user = "greeter"
++user = "greetd"
+ `
+ 	}
+ 
+@@ -411,7 +411,7 @@
+ 		trimmed := strings.TrimSpace(line)
+ 		if !strings.HasPrefix(trimmed, "command =") && !strings.HasPrefix(trimmed, "command=") {
+ 			if strings.HasPrefix(trimmed, "user =") || strings.HasPrefix(trimmed, "user=") {
+-				newLines = append(newLines, `user = "greeter"`)
++				newLines = append(newLines, `user = "greetd"`)
+ 			} else {
+ 				newLines = append(newLines, line)
+ 			}
+@@ -463,7 +463,7 @@
+ 		return fmt.Errorf("failed to move config to /etc/greetd: %w", err)
+ 	}
+ 
+-	logFunc(fmt.Sprintf("✓ Updated greetd configuration (user: greeter, command: %s --command %s -p %s)", wrapperCmd, compositorLower, dmsPath))
++	logFunc(fmt.Sprintf("✓ Updated greetd configuration (user: greetd, command: %s --command %s -p %s)", wrapperCmd, compositorLower, dmsPath))
+ 	return nil
+ }
+ 
