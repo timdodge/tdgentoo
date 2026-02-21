@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 src_compile(){
-	ego build -ldflags="-s -w" -o ./dgop cmd/cli/*.go
+	ego build -ldflags="-s -w" -o ./dgop cmd/dgop/*.go
 }
 
 src_install(){
