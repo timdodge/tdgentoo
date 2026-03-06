@@ -16,10 +16,9 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE="modules"
 
-src_prepare() {
-	eapply -p2 "${FILESDIR}"/DMA_BUFF_NS_support.patch
-	eapply_user
-}
+PATCHES=(
+	"${FILESDIR}"/gasket-dkms-9999_remove_undefn_rhel_crap.patch
+)
 
 src_compile() {
 	local modlist=( apex gasket )
