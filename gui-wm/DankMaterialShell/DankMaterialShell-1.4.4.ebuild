@@ -25,14 +25,9 @@ DEPEND="gui-apps/quickshell
 	dev-qt/qtmultimedia:6
 	sys-process/dgop
 	sys-apps/danksearch
-	x11-terms/kitty
 	gui-apps/xwayland-satellite"
 RDEPEND="${DEPEND}"
 BDEPEND=""
-
-PATCHES=(
-    "${FILESDIR}"/${PN}-1.2.3-use_gentoo_greeter_group.patch
-)
 
 src_compile(){
 	ego build -ldflags="-s -w" -o ./dms ./cmd/dms
