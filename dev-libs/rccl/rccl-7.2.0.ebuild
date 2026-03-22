@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -8,7 +8,7 @@ inherit cmake edo rocm flag-o-matic
 
 DESCRIPTION="ROCm Communication Collectives Library (RCCL)"
 HOMEPAGE="https://github.com/ROCm/rccl"
-SRC_URI="https://github.com/ROCm/rccl/archive/rocm-${PV}.tar.gz -> rccl-${PV}.tar.gz"
+SRC_URI="https://github.com/ROCm/rccl/archive/rocm-${PV}.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/rccl-rocm-${PV}"
 
 LICENSE="BSD"
@@ -16,7 +16,7 @@ SLOT="0/$(ver_cut 1-2)"
 KEYWORDS="~amd64"
 
 # not supported on some GPUs like gfx1151
-IUSE_TARGETS=( gfx906 gfx908 gfx90a gfx942 gfx950 gfx1030 gfx1100 gfx1101 gfx1102 gfx1103 gfx1200 gfx1201 )
+IUSE_TARGETS=( gfx900 gfx906 gfx908 gfx90a gfx942 gfx950 gfx1030 gfx1100 gfx1101 gfx1102 gfx1103 gfx1200 gfx1201 )
 IUSE_TARGETS=( "${IUSE_TARGETS[@]/#/amdgpu_targets_}" )
 ROCM_USEDEP_OPTFLAGS=${IUSE_TARGETS[*]/%/(-)?}
 ROCM_USEDEP=${ROCM_USEDEP_OPTFLAGS// /,}
@@ -30,13 +30,13 @@ RDEPEND="
 	dev-util/hip:${SLOT}
 	dev-util/rocm-smi:${SLOT}
 	roctracer? ( dev-util/roctracer:${SLOT} )
-	dev-libs/libfmt:=
 "
 DEPEND="${RDEPEND}
-	sys-libs/binutils-libs"
+	sys-libs/binutils-libs
+	dev-libs/libfmt:=
+"
 BDEPEND="
-	>=dev-build/cmake-3.22
-	>=dev-build/rocm-cmake-5.7.1
+	dev-build/rocm-cmake:${SLOT}
 	dev-util/hipify-clang:${SLOT}
 	test? ( dev-cpp/gtest )"
 
@@ -44,15 +44,12 @@ RESTRICT="!test? ( test )"
 
 PATCHES=(
 	"${FILESDIR}/${PN}-7.0.1-fix-libcxx.patch"
-	"${FILESDIR}/${PN}-7.0.2-add-gfx1103.patch"
+	"${FILESDIR}/${PN}-7.1.0-add-gfx1103.patch"
 )
 
 src_prepare() {
 	# don't install tests
-	sed -e '/rocm_install(TARGETS rccl-UnitTests/d' -i test/CMakeLists.txt || die
-
-	# cmake4 compatibility requiores cmake_minimum_required>=3.5
-	sed -e '/cmake_minimum_required/ s/2\.8\.12/3.16/' -i test/CMakeLists.txt || die
+	sed -e '/rocm_install/d' -i test/CMakeLists.txt || die
 
 	# too many warnings...
 	sed -e '/target_compile_options(rccl PRIVATE -Wall)/d' -i CMakeLists.txt || die
