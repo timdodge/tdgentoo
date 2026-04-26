@@ -25,7 +25,6 @@ DEPEND="gui-apps/quickshell
 	dev-qt/qtmultimedia:6
 	sys-process/dgop
 	sys-apps/danksearch
-	x11-terms/kitty
 	gui-apps/xwayland-satellite"
 RDEPEND="${DEPEND}"
 BDEPEND=""
