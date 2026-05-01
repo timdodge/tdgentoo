@@ -6,9 +6,9 @@ EAPI=8
 inherit linux-mod-r1 git-r3 udev
 
 DESCRIPTION="Kernel driver it87"
-HOMEPAGE="https://github.com/a1wong/it87"
+HOMEPAGE="https://github.com/frankcrawford/it87"
 
-EGIT_REPO_URI="https://github.com/timdodge/it87"
+EGIT_REPO_URI="https://github.com/frankcrawford/it87"
 
 LICENSE="GPL-2"
 SLOT="0"
