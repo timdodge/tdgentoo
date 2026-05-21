@@ -15,6 +15,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 src_compile() {
+	local modargs=( TARGET=${KV_FULL} )
 	local modlist=( it87 )
 	linux-mod-r1_src_compile
 }
