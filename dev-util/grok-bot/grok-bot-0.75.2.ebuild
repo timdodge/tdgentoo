@@ -9,7 +9,7 @@ DESCRIPTION="Grok Bot desktop agent"
 HOMEPAGE="https://x.ai/bot"
 
 # Stable-channel commit. The deb URL is keyed by this commit.
-GROK_BOT_COMMIT="92808c0ad869b2e3725dbc3b8fa2fcc991687502"
+GROK_BOT_COMMIT="ec623d18b8a375d2ab29814cf974ddb791d8c33b"
 
 SRC_URI="
 	amd64? (
