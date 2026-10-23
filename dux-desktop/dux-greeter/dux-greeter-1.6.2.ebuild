@@ -5,9 +5,9 @@ EAPI=8
 
 inherit shell-completion
 
-DESCRIPTION="A greetd login screen with the Dank Material aesthetic"
-HOMEPAGE="https://github.com/AvengeMedia/dank-greeter"
-SRC_URI="https://github.com/AvengeMedia/${PN}/releases/download/v${PV}/dank-greeter-${PV}.tar.gz -> ${P}.tar.gz"
+DESCRIPTION="A greetd login screen with the Dux Shell aesthetic"
+HOMEPAGE="https://github.com/duxlabs-dev/dux-greeter"
+SRC_URI="https://github.com/duxlabs-dev/dux-greeter/releases/download/v${PV}/dank-greeter-${PV}.tar.gz"
 
 S="${WORKDIR}/dank-greeter-${PV}"
 
@@ -22,7 +22,12 @@ DEPEND="
 RDEPEND="${DEPEND}"
 BDEPEND=">=dev-lang/go-1.25.0"
 
-PATCHES=("${FILESDIR}"/"${PN}-1.6.2-no-strip.patch")
+src_prepare() {
+	# -s -w strips the binary and drops DWARF, so Portage cannot split debug info
+	sed -i '/^BUILD_LDFLAGS=/s/-s -w //' core/Makefile || die
+
+	default
+}
 
 src_compile() {
 	# build the dms-greeter binary

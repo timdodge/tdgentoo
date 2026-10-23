@@ -1,0 +1,2 @@
+move gui-apps/dank-greeter dux-desktop/dux-greeter
+move gui-apps/dankcalendar dux-desktop/dux-calendar
