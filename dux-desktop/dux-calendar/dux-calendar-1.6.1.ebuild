@@ -18,8 +18,10 @@ KEYWORDS="~amd64"
 BDEPEND=">=dev-lang/go-1.25.0"
 
 src_prepare() {
-	sed -i "s/^VERSION=.*$/VERSION=\"${PV}\"/" "${S}/Makefile" || die
+	sed -i "s/^VERSION\??=.*$/VERSION=\"${PV}\"/" "${S}/Makefile" || die
 	sed -i '/^BUILD_LDFLAGS=/s/-s -w //' "${S}/Makefile" || die
+
+	default
 }
 
 src_install() {
