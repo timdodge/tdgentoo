@@ -20,7 +20,7 @@ DEPEND="
 	gui-apps/quickshell
 "
 RDEPEND="${DEPEND}"
-BDEPEND=">=dev-lang/go-1.25.0"
+BDEPEND=">=dev-lang/go-1.27"
 
 src_prepare() {
 	# -s -w strips the binary and drops DWARF, so Portage cannot split debug info
