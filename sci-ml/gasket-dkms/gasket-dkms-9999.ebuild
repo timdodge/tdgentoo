@@ -16,10 +16,6 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE="modules"
 
-PATCHES=(
-	"${FILESDIR}"/gasket-dkms-9999_remove_undefn_rhel_crap.patch
-)
-
 src_compile() {
 	local modlist=( apex gasket )
 	local modargs=( KERNEL_SOURCE_DIR="${KV_OUT_DIR}" )
